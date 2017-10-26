@@ -10,7 +10,7 @@ public class MainTest {
 
     @Test
     public void getText() throws Exception {
-        assertEquals("Check1", main.getText());
+        assertEquals("Check2", main.getText());
     }
 
 }
