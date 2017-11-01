@@ -1,4 +1,4 @@
 
 rootProject.name = 'paxos-basic'
-include 'paxos'
+include ':paxos'
 
