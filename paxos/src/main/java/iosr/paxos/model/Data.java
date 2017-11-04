@@ -1,15 +1,18 @@
 package iosr.paxos.model;
 
-public final class Data {
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.io.Serializable;
+
+public final class Data implements Serializable{
 
     private SequenceNumber sequenceNumber;
     private Entry value;
 
-    public Data(SequenceNumber sequenceNumber){
-        this(sequenceNumber, null);
-    }
-
-    public Data(SequenceNumber sequenceNumber, Entry value) {
+    @JsonCreator
+    public Data(@JsonProperty("sequenceNumber") SequenceNumber sequenceNumber,
+                @JsonProperty("value") Entry value) {
         this.sequenceNumber = sequenceNumber;
         this.value = value;
     }
