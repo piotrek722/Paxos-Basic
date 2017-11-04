@@ -38,4 +38,8 @@ public class BasicAcceptor implements Acceptor {
             communicationService.notifyListeners(accepted);
         }
     }
+
+    public Entry getAccepted() {
+        return accepted;
+    }
 }
