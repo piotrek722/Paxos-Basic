@@ -1,11 +1,16 @@
 package iosr.paxos.services.communication;
 
-import iosr.paxos.model.Data;
-import iosr.paxos.model.messages.MessageType;
+import org.springframework.beans.factory.annotation.Value;
 
-public interface CommunicationService{
+import java.util.HashSet;
+import java.util.Set;
 
-    void sendToAll(Data data, MessageType messageType);
+public abstract class CommunicationService {
 
-    void send(Data data, String address);
+    @Value("#{'${servers.urls}'.split(',')}")
+    private Set<String> serversUrls = new HashSet<>();
+
+    protected Set<String> getServersUrls() {
+        return serversUrls;
+    }
 }

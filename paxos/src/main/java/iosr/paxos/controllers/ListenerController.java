@@ -23,8 +23,7 @@ public class ListenerController {
     }
 
     @PostMapping
-    private ResponseEntity commitValue(@RequestBody  Data data){
-        Entry entry = data.getValue();
+    private ResponseEntity commitValue(@RequestBody Entry entry){
         listener.proposeValue(entry);
         return ResponseEntity.ok().build();
     }
