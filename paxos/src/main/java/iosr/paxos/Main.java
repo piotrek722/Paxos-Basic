@@ -2,6 +2,8 @@ package iosr.paxos;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 public class Main {
@@ -10,11 +12,8 @@ public class Main {
         SpringApplication.run(Main.class, args);
     }
 
-    /**
-     * Sample method to test.
-     */
-    public String getText(){
-        return "Check2";
+    @Bean
+    public RestTemplate restTemplate(){
+        return new RestTemplate();
     }
-
 }
