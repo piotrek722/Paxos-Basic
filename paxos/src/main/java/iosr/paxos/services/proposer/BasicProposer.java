@@ -15,10 +15,11 @@ import iosr.paxos.model.Entry;
 public class BasicProposer implements Proposer {
 
     private ProposerCommunicationService communicationService;
-
     private SequenceNumber sequenceNumber;
     private Data bestPromisedData;
+
     private String value;
+
     private List<Data> promises =new LinkedList<Data>();
     private String serverName;
     @Value("${cluster.size}")
@@ -28,14 +29,19 @@ public class BasicProposer implements Proposer {
         this.communicationService=communicationService;
         this.serverName="serverName";
         sequenceNumber=new SequenceNumber(this.serverName, 0);
-        bestPromisedData = new Data(sequenceNumber,new Entry("",""));
+        bestPromisedData = new Data(sequenceNumber,new Entry("1",this.value));
+        this.value="";
     }
-
-    @Override
-    public Boolean propose(Entry entry) {
-        Data data = new Data(sequenceNumber, entry);
-        communicationService.sendPromiseToAll(data);
-        return null;
+    public  Boolean propose (SequenceNumber sequenceNumber){
+        communicationService.sendPromiseToAll(sequenceNumber);
+        return true;
+    }
+    public  Boolean propose (String value){
+        SequenceNumber sequenceNumber=new SequenceNumber(serverName,0);
+        bestPromisedData=new Data(sequenceNumber, new Entry("1", value));
+        this.value=value;
+        promises = communicationService.sendPromiseToAll(sequenceNumber);
+        return true;
     }
 
     @Override
@@ -45,33 +51,41 @@ public class BasicProposer implements Proposer {
     }
     public void handleCommit(Data data){
         promises.add(data);
-        bestPromisedData=comparePromiseSequenceNumber(data);
+        bestPromisedData=comparePromiseSequenceNumber(promises);
         if (isQuorum()){
-            communicationService.sendAcceptToAll(data);
+            communicationService.sendAcceptToAll(bestPromisedData);
         }
     }
     private Boolean isQuorum(){
         return promises.size()>=clusterSize/2+1;
     }
+
     private void clear(){
         sequenceNumber.setSeqNumber(0);
         promises.clear();
-        bestPromisedData=new Data(new SequenceNumber(serverName,0),new Entry("",""));
+        value="";
+        bestPromisedData=new Data(new SequenceNumber(serverName,0),new Entry("1",this.value));
     }
-    private Data comparePromiseSequenceNumber(Data data){
-      return data.getSequenceNumber().getSequenceNumber() >bestPromisedData.getSequenceNumber().getSequenceNumber() ? data :bestPromisedData;
+    private Data comparePromiseSequenceNumber (List<Data> promisesList){
+        for (Data promise : promisesList){
+            if(promise.getSequenceNumber().getSequenceNumber() > bestPromisedData.getSequenceNumber().getSequenceNumber()){
+                bestPromisedData=promise;
+            }
+        }
+        return bestPromisedData;
     }
-
     //for tests:
     public LinkedList<Data> getPromises(){
         return (LinkedList<Data>) promises;
     }
-
     public Data getBestPromisedData() {
         return bestPromisedData;
     }
-
     public void setClusterSize(int clusterSize) {
         this.clusterSize = clusterSize;
     }
-}
+    }
+
+
+
+

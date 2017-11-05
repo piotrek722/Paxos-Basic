@@ -1,9 +1,11 @@
 package iosr.paxos.services.communication;
 
+import iosr.paxos.model.Data;
 import iosr.paxos.model.SequenceNumber;
 import org.springframework.web.client.RestTemplate;
-import iosr.paxos.model.Data;
-import iosr.paxos.model.Entry;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class ProposerCommunicationService extends CommunicationService {
@@ -13,17 +15,17 @@ public class ProposerCommunicationService extends CommunicationService {
         this.restTemplate = restTemplate;
     }
 
+    public List<Data> sendPromiseToAll(SequenceNumber sequenceNumber) {
+        return getServersUrls().stream().map(serverUrl ->
+                restTemplate.getForEntity(serverUrl + "/acceptor/proposal?sequenceNumber=" + sequenceNumber.toString(),
+                        Data.class, sequenceNumber).getBody()
+        ).collect(Collectors.toList());
 
-    public void sendPromiseToAll(Data data) {
-        getServersUrls().forEach(serverUrl -> {
-            restTemplate.postForLocation(serverUrl + "/acceptor/proposal", data);
-        });
     }
-
-    public void sendAcceptToAll(Data data)    {
+    public void sendAcceptToAll(Data data) {
         getServersUrls().forEach(serverUrl -> {
             restTemplate.postForLocation(serverUrl + "/acceptor/accept", data);
         });
     }
-    }
+}
 
