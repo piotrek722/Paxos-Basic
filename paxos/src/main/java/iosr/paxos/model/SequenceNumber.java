@@ -42,4 +42,7 @@ public final class SequenceNumber implements Serializable {
         result = 31 * result + (seqNumber != null ? seqNumber.hashCode() : 0);
         return result;
     }
+    public void setSeqNumber(int value){
+        this.seqNumber=value;
+    }
 }
