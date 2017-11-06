@@ -22,8 +22,7 @@ public class BasicAcceptor implements Acceptor {
 
     @Override
     public Data handlePrepareRequest(SequenceNumber sequenceNumber) {
-
-        if (Objects.isNull(maxSequenceNumber) || sequenceNumber.getSequenceNumber() > maxSequenceNumber.getSequenceNumber()) {
+        if (Objects.isNull(maxSequenceNumber) || sequenceNumber.getSeqNumber() > maxSequenceNumber.getSeqNumber()) {
             maxSequenceNumber = sequenceNumber;
         }
         return new Data(maxSequenceNumber, accepted);

@@ -34,7 +34,7 @@ public class BasicProposer implements Proposer {
     }
 
     @Override
-    public Boolean propose(String key, String value) {
+    public boolean propose(String key, String value) {
         this.value = value;
         this.key = key;
         bestPromisedData = new Data(new SequenceNumber(serverName, 0), new Entry(key, value));
@@ -43,13 +43,12 @@ public class BasicProposer implements Proposer {
     }
 
     @Override
-    public void commit(Data data) {
-        handleCommit(data);
+    public void commit() {
+        handleCommit();
         if (isQuorum()) clear();
     }
 
-    void handleCommit(Data data) {
-        promises.add(data);
+    void handleCommit() {
         bestPromisedData = comparePromiseSequenceNumber(promises);
         if (isQuorum()) {
             communicationService.sendAcceptToAll(bestPromisedData);
@@ -70,7 +69,8 @@ public class BasicProposer implements Proposer {
 
     private Data comparePromiseSequenceNumber(List<Data> promisesList) {
         for (Data promise : promisesList) {
-            if (promise.getSequenceNumber().getSequenceNumber() > bestPromisedData.getSequenceNumber().getSequenceNumber()) {
+            //TODO probably remove this null check?? Or check this earlier or sth
+            if (promise.getSequenceNumber().getSeqNumber() != null && promise.getSequenceNumber().getSeqNumber() > bestPromisedData.getSequenceNumber().getSeqNumber()) {
                 bestPromisedData = promise;
             }
         }

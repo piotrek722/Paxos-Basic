@@ -21,7 +21,7 @@ public final class SequenceNumber implements Serializable {
         return serverName;
     }
 
-    public Integer getSequenceNumber() {
+    public Integer getSeqNumber() {
         return seqNumber;
     }
 

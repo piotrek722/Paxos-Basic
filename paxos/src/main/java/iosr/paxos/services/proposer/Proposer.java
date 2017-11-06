@@ -10,8 +10,8 @@ import java.util.List;
 public interface Proposer {
 
    // Boolean propose(String value);
-    Boolean propose(String key, String value);
-    void commit(Data data);
+    boolean propose(String key, String value);
+    void commit();
     List<Data> getPromises();
 
 }

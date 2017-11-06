@@ -17,14 +17,12 @@ public class ProposerCommunicationService extends CommunicationService {
 
     public List<Data> sendPromiseToAll(SequenceNumber sequenceNumber) {
         return getServersUrls().stream().map(serverUrl ->
-                restTemplate.getForEntity(serverUrl + "/acceptor/proposal?sequenceNumber=" + sequenceNumber.toString(),
-                        Data.class, sequenceNumber).getBody()
+                restTemplate.getForEntity(serverUrl + "/acceptor/proposal?sequenceNumber={sequenceNumber}", Data.class, sequenceNumber).getBody()
         ).collect(Collectors.toList());
     }
+
     public void sendAcceptToAll(Data data) {
-        getServersUrls().forEach(serverUrl -> {
-            restTemplate.postForLocation(serverUrl + "/acceptor/accept", data);
-        });
+        getServersUrls().forEach(serverUrl -> restTemplate.postForLocation(serverUrl + "/acceptor/accept", data));
     }
 }
 

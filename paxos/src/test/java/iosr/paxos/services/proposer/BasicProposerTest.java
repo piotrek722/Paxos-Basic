@@ -3,14 +3,11 @@ package iosr.paxos.services.proposer;
 import iosr.paxos.model.Entry;
 import iosr.paxos.model.SequenceNumber;
 import iosr.paxos.services.communication.ProposerCommunicationService;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import iosr.paxos.model.Data;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.LinkedList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -43,7 +40,7 @@ public class BasicProposerTest {
         basicProposer.handleCommit(data2);
         basicProposer.handleCommit(data3);
         basicProposer.handleCommit(data4);
-        assertEquals(6, (int)basicProposer.getBestPromisedData().getSequenceNumber().getSequenceNumber() );
+        assertEquals(6, (int)basicProposer.getBestPromisedData().getSequenceNumber().getSeqNumber() );
         assertEquals("cow jumps over the moon", basicProposer.getBestPromisedData().getValue().getValue());
         assertEquals("did you know that", basicProposer.getBestPromisedData().getValue().getKey());
 
