@@ -12,6 +12,7 @@ public interface Proposer {
    // Boolean propose(String value);
     boolean propose(String key, String value);
     void commit();
+    void commit (Data data);
     List<Data> getPromises();
 
 }

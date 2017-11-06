@@ -55,6 +55,17 @@ public class BasicProposer implements Proposer {
         }
     }
 
+    public void commit(Data data) {
+        handleCommit(data);
+        if (isQuorum()) clear();
+    }
+    public void handleCommit (Data data){
+      promises.add(data);
+      bestPromisedData = comparePromiseSequenceNumber(promises);
+        if (isQuorum()) {
+            communicationService.sendAcceptToAll(bestPromisedData);
+        }
+    }
     private Boolean isQuorum() {
         return promises.size() >= clusterSize / 2 + 1;
     }
@@ -76,6 +87,7 @@ public class BasicProposer implements Proposer {
         }
         return bestPromisedData;
     }
+
 
     //for tests:
     public List<Data> getPromises() {
