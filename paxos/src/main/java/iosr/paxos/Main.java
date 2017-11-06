@@ -1,5 +1,6 @@
 package iosr.paxos;
 
+import iosr.paxos.services.communication.ProposerCommunicationService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -15,5 +16,9 @@ public class Main {
     @Bean
     public RestTemplate restTemplate(){
         return new RestTemplate();
+    }
+    @Bean
+    public ProposerCommunicationService proposerCommunicationService(){
+        return new ProposerCommunicationService(restTemplate());
     }
 }

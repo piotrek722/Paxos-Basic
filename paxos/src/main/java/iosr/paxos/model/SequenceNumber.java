@@ -25,6 +25,7 @@ public final class SequenceNumber implements Serializable {
         return seqNumber;
     }
 
+    public Integer getSequenceNumber() {return seqNumber;}
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -41,5 +42,14 @@ public final class SequenceNumber implements Serializable {
         int result = serverName != null ? serverName.hashCode() : 0;
         result = 31 * result + (seqNumber != null ? seqNumber.hashCode() : 0);
         return result;
+    }
+
+    public void setSeqNumber(int value) {
+        this.seqNumber = value;
+    }
+
+    @Override
+    public String toString() {
+        return "{\"serverName\": \"" + serverName + "\", \"seqNumber\": " + seqNumber + "}";
     }
 }
