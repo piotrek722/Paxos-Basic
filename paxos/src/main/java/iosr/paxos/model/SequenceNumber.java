@@ -21,7 +21,7 @@ public final class SequenceNumber implements Serializable {
         return serverName;
     }
 
-    public Integer getSequenceNumber() {
+    public Integer getSeqNumber() {
         return seqNumber;
     }
 
@@ -41,5 +41,14 @@ public final class SequenceNumber implements Serializable {
         int result = serverName != null ? serverName.hashCode() : 0;
         result = 31 * result + (seqNumber != null ? seqNumber.hashCode() : 0);
         return result;
+    }
+
+    public void setSeqNumber(int value) {
+        this.seqNumber = value;
+    }
+
+    @Override
+    public String toString() {
+        return "{\"serverName\": \"" + serverName + "\", \"seqNumber\": " + seqNumber + "}";
     }
 }
