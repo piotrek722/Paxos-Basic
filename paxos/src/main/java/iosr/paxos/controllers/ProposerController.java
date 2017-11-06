@@ -14,8 +14,8 @@ public class ProposerController {
     }
 
     @PostMapping("/propose")
-    public ResponseEntity postValue(@RequestParam String value){
-            proposer.propose(value);
+    public ResponseEntity postValue(@RequestParam String key, @RequestParam String value){
+            proposer.propose(key, value);
         return ResponseEntity.ok().build();
     }
 

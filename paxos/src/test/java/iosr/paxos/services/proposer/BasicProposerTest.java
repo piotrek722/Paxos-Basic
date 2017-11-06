@@ -12,16 +12,23 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.LinkedList;
 
-public class BasicProposerTest {
-    BasicProposer basicProposer = new BasicProposer(new ProposerCommunicationService(new RestTemplate()));
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 
+public class BasicProposerTest {
+
+    BasicProposer basicProposer = new BasicProposer(new ProposerCommunicationService(new RestTemplate()));
+    private static final Data data = new Data(new SequenceNumber("serverName", 0), new Entry("",""));
+    private static final Data data1 = new Data(new SequenceNumber("serverName", 3), new Entry("",""));
+    private static final Data data2 = new Data(new SequenceNumber("serverName", 5) ,new Entry("",""));
+    private static final Data data3 = new Data(new SequenceNumber("serverName", 6), new Entry("did you know that","cow jumps over the moon"));
+    private static final Data data4 = new Data(new SequenceNumber("serverName", 1), new Entry("",""));
     @Before
     public void setProposer()
     {
         basicProposer.setClusterSize(5);
     }
-
-
 
     @Test
     public void propose() throws Exception {
@@ -29,41 +36,34 @@ public class BasicProposerTest {
 
 
     @Test
-    public void shouldChooseBestSequenceNumberedData() throws Exception {
-        Data data1 = new Data (new SequenceNumber("server",1),new Entry("",""));
-        Data data2 = new Data (new SequenceNumber("server",2),new Entry("",""));
-        Data data3 = new Data (new SequenceNumber("server",1),new Entry("",""));
-        Data data4 = new Data (new SequenceNumber("server",7),new Entry("","cow jumps over the moon"));
-        Data data5 = new Data (new SequenceNumber("server",2),new Entry("",""));
-        Data data6 = new Data (new SequenceNumber("server",2),new Entry("",""));
+    public void shouldAssignDataWithBestSequenceNumber () throws Exception {
+
+        basicProposer.handleCommit(data);
         basicProposer.handleCommit(data1);
         basicProposer.handleCommit(data2);
         basicProposer.handleCommit(data3);
         basicProposer.handleCommit(data4);
-        basicProposer.handleCommit(data5);
-        basicProposer.handleCommit(data6);
-        Assert.assertEquals(basicProposer.getBestPromisedData().getValue().getValue(), "cow jumps over the moon");
+        assertEquals(6, (int)basicProposer.getBestPromisedData().getSequenceNumber().getSequenceNumber() );
+        assertEquals("cow jumps over the moon", basicProposer.getBestPromisedData().getValue().getValue());
+        assertEquals("did you know that", basicProposer.getBestPromisedData().getValue().getKey());
+
+    }
+    @Test
+    public void shouldClearAfterQuorumCommit(){
+        basicProposer.commit(data);
+        basicProposer.commit(data1);
+        basicProposer.commit(data2);
+        assertEquals("", basicProposer.getValue());
+        assertEquals(0, basicProposer.getPromises().size());
+    }
+    @Test
+    public void shouldNotClearBeforeQuorum(){
+        basicProposer.propose("1","2");
+        basicProposer.commit(data1);
+        basicProposer.commit(data3);
+        assertNotEquals("", basicProposer.getValue());
+        assertNotEquals(0, basicProposer.getPromises().size());
     }
 
-    @Test
-    public void shouldClearAfterSendingAccept() throws Exception{
-        Data data4 = new Data (new SequenceNumber("server",7),new Entry("","cow jumps over the moon"));
-        Data data5 = new Data (new SequenceNumber("server",2),new Entry("",""));
-        Data data6 = new Data (new SequenceNumber("server",0),new Entry("",""));
-        basicProposer.commit(data4);
-        basicProposer.commit(data5);
-        basicProposer.commit(data5);
-        Assert.assertEquals(basicProposer.getBestPromisedData().getSequenceNumber().getSequenceNumber().toString(),"0");
-        Assert.assertEquals(basicProposer.getPromises(), new LinkedList<Data>());
-    }
-    @Test
-    public void shouldNotClearBeforeQuorum() throws Exception{
-        Data data4 = new Data (new SequenceNumber("server",7),new Entry("","cow jumps over the moon"));
-        basicProposer.commit(data4);
-        Assert.assertEquals(basicProposer.getBestPromisedData().getSequenceNumber().getSequenceNumber().toString(),"7");
-        LinkedList<Data> expected = new LinkedList<Data>();
-        expected.add(data4);
-        Assert.assertEquals(basicProposer.getPromises(),expected);
-    }
 
 }

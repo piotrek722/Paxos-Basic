@@ -20,7 +20,6 @@ public class ProposerCommunicationService extends CommunicationService {
                 restTemplate.getForEntity(serverUrl + "/acceptor/proposal?sequenceNumber=" + sequenceNumber.toString(),
                         Data.class, sequenceNumber).getBody()
         ).collect(Collectors.toList());
-
     }
     public void sendAcceptToAll(Data data) {
         getServersUrls().forEach(serverUrl -> {
