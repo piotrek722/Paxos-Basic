@@ -9,58 +9,61 @@ import org.junit.Test;
 import iosr.paxos.model.Data;
 import org.springframework.web.client.RestTemplate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
+import java.util.LinkedList;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class BasicProposerTest {
 
     BasicProposer basicProposer = new BasicProposer(new ProposerCommunicationService(new RestTemplate()));
-    private static final Data data = new Data(new SequenceNumber("serverName", 0), new Entry("",""));
-    private static final Data data1 = new Data(new SequenceNumber("serverName", 3), new Entry("",""));
-    private static final Data data2 = new Data(new SequenceNumber("serverName", 5) ,new Entry("",""));
-    private static final Data data3 = new Data(new SequenceNumber("serverName", 6), new Entry("did you know that","cow jumps over the moon"));
-    private static final Data data4 = new Data(new SequenceNumber("serverName", 1), new Entry("",""));
+    private static  List<Data> promises = new LinkedList<>();
+
+
+
     @Before
-    public void setProposer()
-    {
+    public void setProposer() {
         basicProposer.setClusterSize(5);
+        promises.add(new Data(new SequenceNumber("serverName", 0), new Entry("", "")));
+        promises.add(new Data(new SequenceNumber("serverName", 1), new Entry("", "")));
+        promises.add(new Data(new SequenceNumber("serverName", 2), new Entry("", "")));
+        promises.add(new Data(new SequenceNumber("serverName", 7), new Entry("did you know that", "cow jumps over the moon")));
+        promises.add(new Data(new SequenceNumber("serverName", 5), new Entry("", "")));
+        basicProposer.setPromises(promises);
     }
 
-    @Test
-    public void propose() throws Exception {
-    }
-
 
     @Test
-    public void shouldAssignDataWithBestSequenceNumber () throws Exception {
-
-        basicProposer.handleCommit(data);
-        basicProposer.handleCommit(data1);
-        basicProposer.handleCommit(data2);
-        basicProposer.handleCommit(data3);
-        basicProposer.handleCommit(data4);
-        assertEquals(6, (int)basicProposer.getBestPromisedData().getSequenceNumber().getSeqNumber() );
-        assertEquals("cow jumps over the moon", basicProposer.getBestPromisedData().getValue().getValue());
-        assertEquals("did you know that", basicProposer.getBestPromisedData().getValue().getKey());
-
+    public void propose () throws Exception {
+        basicProposer.propose("key", "value");
+        assertEquals("value",basicProposer.getValue());
     }
     @Test
     public void shouldClearAfterQuorumCommit(){
-        basicProposer.commit(data);
-        basicProposer.commit(data1);
-        basicProposer.commit(data2);
-        assertEquals("", basicProposer.getValue());
+        basicProposer.commit();
+        assertNull( basicProposer.getValue());
         assertEquals(0, basicProposer.getPromises().size());
     }
+
     @Test
-    public void shouldNotClearBeforeQuorum(){
-        basicProposer.propose("1","2");
-        basicProposer.commit(data1);
-        basicProposer.commit(data3);
-        assertNotEquals("", basicProposer.getValue());
-        assertNotEquals(0, basicProposer.getPromises().size());
+    public void handleProposeTest(){
+        basicProposer.handlePrepare("key", "value");
+        assertEquals("cow jumps over the moon", basicProposer.getValue());
+
     }
+
+    @Test
+    public void shouldFailWhenBetterPromised(){
+        assertFalse(basicProposer.handlePrepare("key2","val2"));
+        basicProposer.setPromises(promises);
+    }
+
+    @Test
+    public void shouldReturnTrueWithNoBetterResponse(){
+        basicProposer.setPromises(new LinkedList<>());
+        assertTrue(basicProposer.handlePrepare("key", "val"));
+    }
+
 
 
 }

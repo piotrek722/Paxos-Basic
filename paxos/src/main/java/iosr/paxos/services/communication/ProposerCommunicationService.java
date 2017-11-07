@@ -2,12 +2,13 @@ package iosr.paxos.services.communication;
 
 import iosr.paxos.model.Data;
 import iosr.paxos.model.SequenceNumber;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-
+@Service
 public class ProposerCommunicationService extends CommunicationService {
     private RestTemplate restTemplate;
 

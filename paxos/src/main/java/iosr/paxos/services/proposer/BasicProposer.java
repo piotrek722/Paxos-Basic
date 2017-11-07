@@ -15,7 +15,6 @@ public class BasicProposer implements Proposer {
 
     private ProposerCommunicationService communicationService;
     private SequenceNumber sequenceNumber;
-    private Data bestPromisedData;
 
     private String serverName;
     private String key;
@@ -25,47 +24,52 @@ public class BasicProposer implements Proposer {
     @Value("${cluster.size}")
     private int clusterSize;
 
-    BasicProposer(ProposerCommunicationService communicationService) {
+    public BasicProposer(ProposerCommunicationService communicationService) {
         this.communicationService = communicationService;
-        this.serverName = "serverName";
         sequenceNumber = new SequenceNumber(this.serverName, 0);
-        bestPromisedData = new Data(sequenceNumber, new Entry(this.key, this.value));
-        this.value = "";
     }
 
     @Override
-    public boolean propose(String key, String value) {
+    public boolean propose(String key, String value){
+        //issue a prepare request
+        //get the best response of promised
+        //if quorum promised, issue a commit (accept request), with old seqNr
+        boolean propose= prepare(key, value);
+        if(isQuorum()) commit();
+        return propose;
+    }
+
+    public boolean prepare(String key, String value){
+        promises=communicationService.sendPromiseToAll(sequenceNumber);
+        return handlePrepare(key, value);
+    }
+
+    public boolean handlePrepare(String key, String value){
         this.value = value;
         this.key = key;
-        bestPromisedData = new Data(new SequenceNumber(serverName, 0), new Entry(key, value));
-        promises = communicationService.sendPromiseToAll(sequenceNumber);
-        return true;
+        int bestSequenceNumber = this.sequenceNumber.getSeqNumber();
+        String bestValue=null;
+        boolean result= true;
+        for (Data promise :promises){
+            if(promise.getSequenceNumber().getSeqNumber() !=null && promise.getSequenceNumber().getSeqNumber()>bestSequenceNumber){
+                result=false;
+                bestSequenceNumber=promise.getSequenceNumber().getSeqNumber();
+                bestValue=promise.getValue().getValue();
+            }
+        }
+        if (bestSequenceNumber>this.sequenceNumber.getSeqNumber()){
+            this.value= (bestValue==null) ? this.value : bestValue;
+           // this.sequenceNumber.setSeqNumber(bestSequenceNumber);
+        }
+        return result;
     }
 
     @Override
     public void commit() {
-        handleCommit();
-        if (isQuorum()) clear();
+        communicationService.sendAcceptToAll(new Data(sequenceNumber, new Entry(key, value)));
+        clear();
     }
 
-    void handleCommit() {
-        bestPromisedData = comparePromiseSequenceNumber(promises);
-        if (isQuorum()) {
-            communicationService.sendAcceptToAll(bestPromisedData);
-        }
-    }
-
-    public void commit(Data data) {
-        handleCommit(data);
-        if (isQuorum()) clear();
-    }
-    public void handleCommit (Data data){
-      promises.add(data);
-      bestPromisedData = comparePromiseSequenceNumber(promises);
-        if (isQuorum()) {
-            communicationService.sendAcceptToAll(bestPromisedData);
-        }
-    }
     private Boolean isQuorum() {
         return promises.size() >= clusterSize / 2 + 1;
     }
@@ -73,29 +77,17 @@ public class BasicProposer implements Proposer {
     private void clear() {
         sequenceNumber.setSeqNumber(0);
         promises.clear();
-        value = "";
-        key = "";
-        bestPromisedData = new Data(new SequenceNumber(serverName, 0), new Entry("", ""));
+        value = null;
+        key = null;
     }
-
-    private Data comparePromiseSequenceNumber(List<Data> promisesList) {
-        for (Data promise : promisesList) {
-            //TODO probably remove this null check?? Or check this earlier or sth
-            if (promise.getSequenceNumber().getSeqNumber() != null && promise.getSequenceNumber().getSeqNumber() > bestPromisedData.getSequenceNumber().getSeqNumber()) {
-                bestPromisedData = promise;
-            }
-        }
-        return bestPromisedData;
-    }
-
 
     //for tests:
     public List<Data> getPromises() {
         return promises;
     }
 
-    Data getBestPromisedData() {
-        return bestPromisedData;
+    public void setPromises(List<Data> promises) {
+        this.promises = promises;
     }
 
     void setClusterSize(int clusterSize) {
