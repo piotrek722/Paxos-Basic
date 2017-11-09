@@ -34,7 +34,7 @@ public class BasicProposer implements Proposer {
     }
 
     @Override
-    public boolean propose(Entry entry) {
+    public synchronized boolean propose(Entry entry) {
         this.clientEntry = entry;
         this.sequenceNumber.incrementSeqNumberByOne();
 

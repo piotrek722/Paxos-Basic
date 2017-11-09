@@ -1,5 +1,4 @@
 import requests
-import random
 
 servers = ['https://paxos-1.herokuapp.com',
            'https://paxos-2.herokuapp.com',
@@ -12,11 +11,11 @@ def check_values(key):
     print('Checking values...')
     for server in servers:
         r = requests.get(server + '/listener/' + key)
-        print(server, r.status_code, 'value:', r.text)
+        print(server, r.status_code)
 
 
 def make_propose(key, value):
-    server = random.choice(servers)
+    server = servers[4]
     r = requests.post(server + '/proposer/propose', json={"key": key, "value": value})
     print(server, r.status_code, 'value:', value, 'succeeded:', r.text)
 
@@ -24,7 +23,7 @@ def make_propose(key, value):
 print('Sending one propose message')
 
 key = 'test'
-value = '2'
+value = '1'
 
 make_propose(key, value)
 check_values(key)
