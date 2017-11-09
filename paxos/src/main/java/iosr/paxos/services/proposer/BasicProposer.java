@@ -7,8 +7,8 @@ import iosr.paxos.services.communication.ProposerCommunicationService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
-import java.util.List;
+import javax.annotation.PostConstruct;
+import java.util.*;
 
 @Service
 public class BasicProposer implements Proposer {
@@ -16,87 +16,85 @@ public class BasicProposer implements Proposer {
     private ProposerCommunicationService communicationService;
     private SequenceNumber sequenceNumber;
 
-    private String serverName;
-    private String key;
-    private String value;
-    private List<Data> promises = new LinkedList<>();
-
     @Value("${cluster.size}")
     private int clusterSize;
 
+    @Value("${server.name}")
+    private String serverName;
+
+    private Entry clientEntry;
+
     public BasicProposer(ProposerCommunicationService communicationService) {
         this.communicationService = communicationService;
+    }
+
+    @PostConstruct
+    private void init(){
         sequenceNumber = new SequenceNumber(this.serverName, 0);
     }
 
     @Override
-    public boolean propose(String key, String value){
-        //issue a prepare request
-        //get the best response of promised
-        //if quorum promised, issue a commit (accept request), with old seqNr
-        boolean propose= prepare(key, value);
-        if(isQuorum()) commit();
-        return propose;
-    }
+    public boolean propose(Entry entry) {
+        this.clientEntry = entry;
+        this.sequenceNumber.incrementSeqNumberByOne();
 
-    public boolean prepare(String key, String value){
-        promises=communicationService.sendPromiseToAll(sequenceNumber);
-        return handlePrepare(key, value);
-    }
+        List<Data> promises = communicationService.sendPromiseToAll(sequenceNumber);
+        boolean isValueNotChanged = handlePromises(promises);
 
-    public boolean handlePrepare(String key, String value){
-        this.value = value;
-        this.key = key;
-        int bestSequenceNumber = this.sequenceNumber.getSeqNumber();
-        String bestValue=null;
-        boolean result= true;
-        for (Data promise :promises){
-            if(promise.getSequenceNumber().getSeqNumber() !=null && promise.getSequenceNumber().getSeqNumber()>bestSequenceNumber){
-                result=false;
-                bestSequenceNumber=promise.getSequenceNumber().getSeqNumber();
-                bestValue=promise.getValue().getValue();
-            }
+        if (isQuorum(promises)) {
+            commit();
+            return isValueNotChanged;
         }
-        if (bestSequenceNumber>this.sequenceNumber.getSeqNumber()){
-            this.value= (bestValue==null) ? this.value : bestValue;
-           // this.sequenceNumber.setSeqNumber(bestSequenceNumber);
-        }
-        return result;
+
+        return false;
     }
 
     @Override
     public void commit() {
-        communicationService.sendAcceptToAll(new Data(sequenceNumber, new Entry(key, value)));
-        clear();
+        communicationService.sendAcceptToAll(new Data(sequenceNumber, clientEntry));
     }
 
-    private Boolean isQuorum() {
-        return promises.size() >= clusterSize / 2 + 1;
+    private boolean handlePromises(List<Data> promises) {
+
+        Optional<Entry> acceptedEntry = promises.stream()
+                .max(Comparator.comparingInt(promise -> promise.getSequenceNumber().getSeqNumber()))
+                .map(Data::getValue);
+
+        if(acceptedEntry.isPresent()){
+            this.clientEntry = acceptedEntry.get();
+            return false;
+        }
+
+        return true;
+//        boolean isAccepted = true;
+//        for (Data promise : promises) {
+//
+//            Entry previouslyAcceptedValue = promise.getValue();
+//            if(!Objects.isNull(previouslyAcceptedValue)){
+//                this.clientEntry = previouslyAcceptedValue;
+//            }
+//            if (promise.getSequenceNumber().getSeqNumber() > getSequenceNumber().getSeqNumber()) {
+//                isAccepted = false;
+//                this.sequenceNumber.setSeqNumber(promise.getSequenceNumber().getSeqNumber());
+//              break;
+//            }
+//        }
     }
 
-    private void clear() {
-        sequenceNumber.setSeqNumber(0);
-        promises.clear();
-        value = null;
-        key = null;
+    private Boolean isQuorum(List<Data> promises) {
+        long count = promises.stream()
+                .map(Data::getSequenceNumber)
+                .map(SequenceNumber::getSeqNumber)
+                .filter(sequenceNumber -> sequenceNumber.equals(this.sequenceNumber.getSeqNumber()))
+                .count();
+        return count >= (clusterSize / 2) + 1;
     }
 
-    //for tests:
-    public List<Data> getPromises() {
-        return promises;
+    public SequenceNumber getSequenceNumber() {
+        return sequenceNumber;
     }
 
-    public void setPromises(List<Data> promises) {
-        this.promises = promises;
-    }
 
-    void setClusterSize(int clusterSize) {
-        this.clusterSize = clusterSize;
-    }
-
-    public String getValue() {
-        return value;
-    }
 }
 
 

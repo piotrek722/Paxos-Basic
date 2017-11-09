@@ -18,7 +18,7 @@ public class ProposerCommunicationService extends CommunicationService {
 
     public List<Data> sendPromiseToAll(SequenceNumber sequenceNumber) {
         return getServersUrls().stream().map(serverUrl ->
-                restTemplate.getForEntity(serverUrl + "/acceptor/proposal?sequenceNumber={sequenceNumber}", Data.class, sequenceNumber).getBody()
+                restTemplate.postForEntity(serverUrl + "/acceptor/proposal?sequenceNumber", sequenceNumber, Data.class).getBody()
         ).collect(Collectors.toList());
     }
 

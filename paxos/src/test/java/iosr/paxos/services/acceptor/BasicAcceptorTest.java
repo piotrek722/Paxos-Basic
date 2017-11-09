@@ -2,6 +2,7 @@ package iosr.paxos.services.acceptor;
 
 import iosr.paxos.model.Data;
 import iosr.paxos.model.Entry;
+import iosr.paxos.model.ProposeAnswer;
 import iosr.paxos.model.SequenceNumber;
 import iosr.paxos.services.communication.AcceptorCommunicationService;
 import org.springframework.web.client.RestTemplate;
@@ -20,10 +21,10 @@ public class BasicAcceptorTest {
         SequenceNumber sequenceNumber = new SequenceNumber("server1", 1);
 
         //when
-        Data data = acceptor.handlePrepareRequest(sequenceNumber);
+        ProposeAnswer answer = acceptor.handlePrepareRequest(sequenceNumber);
 
         //then
-        assertEquals(data.getSequenceNumber(), sequenceNumber);
+        assertEquals(answer.getSequenceNumber(), sequenceNumber);
     }
 
     @Test
@@ -34,23 +35,25 @@ public class BasicAcceptorTest {
 
         //when
         acceptor.handlePrepareRequest(higlerSequenceNumber);
-        Data data = acceptor.handlePrepareRequest(lowerSequenceNumber);
+        ProposeAnswer answer = acceptor.handlePrepareRequest(lowerSequenceNumber);
 
         //then
-        assertEquals(data.getSequenceNumber(), higlerSequenceNumber);
+        assertEquals(answer.getSequenceNumber(), higlerSequenceNumber);
     }
 
     @Test
     public void shouldAcceptWhenSequenceNumbersMatch() throws Exception {
         //given
         SequenceNumber sequenceNumber = new SequenceNumber("server1", 1);
+        Entry entry = new Entry("key", "value");
+        Data data = new Data(sequenceNumber, entry);
 
         //when
-        Data data = acceptor.handlePrepareRequest(sequenceNumber);
+        ProposeAnswer answer = acceptor.handlePrepareRequest(sequenceNumber);
         acceptor.accept(data);
 
         //then
-        assertEquals(data.getValue(), acceptor.getAccepted());
+        assertEquals(entry, acceptor.getAccepted().getValue());
     }
 
     @Test

@@ -12,7 +12,7 @@ def check_values(key):
     print('Checking values...')
     for server in servers:
         r = requests.get(server + '/listener/' + key)
-        print(server, r.status_code)
+        print(server, r.status_code, r.text)
 
 
 print('Sending one propose message')
@@ -21,7 +21,7 @@ key = 'test'
 value = '2'
 
 server = random.choice(servers)
-r = requests.post(server + '/proposer/propose?key=' + key + '&value=' + value)
+r = requests.post(server + '/proposer/propose', json={"key": key, "value": value})
 print(server, r.status_code)
 check_values(key)
 
@@ -35,8 +35,8 @@ value2 = '4'
 server1 = random.choice(servers)
 server2 = random.choice(servers)
 
-r1 = requests.post(server1 + '/proposer/propose?key=' + key + '&value=' + value1)
-r2 = requests.post(server2 + '/proposer/propose?key=' + key + '&value=' + value2)
+r1 = requests.post(server + '/proposer/propose', json={"key": key, "value": value1})
+r2 = requests.post(server + '/proposer/propose', json={"key": key, "value": value2})
 
 print(server1, r1.status_code)
 print(server2, r2.status_code)

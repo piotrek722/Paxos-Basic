@@ -2,6 +2,7 @@ package iosr.paxos.services.acceptor;
 
 import iosr.paxos.model.Data;
 import iosr.paxos.model.Entry;
+import iosr.paxos.model.ProposeAnswer;
 import iosr.paxos.model.SequenceNumber;
 import iosr.paxos.services.communication.AcceptorCommunicationService;
 import org.springframework.stereotype.Service;
@@ -14,32 +15,42 @@ public class BasicAcceptor implements Acceptor {
     private AcceptorCommunicationService communicationService;
 
     private SequenceNumber maxSequenceNumber;
-    private Entry accepted;
+    private Data accepted;
 
     public BasicAcceptor(AcceptorCommunicationService communicationService) {
         this.communicationService = communicationService;
     }
 
     @Override
-    public Data handlePrepareRequest(SequenceNumber sequenceNumber) {
+    public synchronized ProposeAnswer handlePrepareRequest(SequenceNumber sequenceNumber) {
 
         if (Objects.isNull(maxSequenceNumber) || sequenceNumber.getSeqNumber() > maxSequenceNumber.getSeqNumber()) {
             maxSequenceNumber = sequenceNumber;
         }
-        return new Data(maxSequenceNumber, accepted);
+        return new ProposeAnswer(maxSequenceNumber, accepted);
     }
 
     @Override
-    public void accept(Data data) {
+    public synchronized void accept(Data data) {
 
         if (data.getSequenceNumber().equals(maxSequenceNumber)) {
             //can be accepted
-            accepted = data.getValue();
+            accepted = data;
             communicationService.notifyListeners(accepted);
         }
     }
 
-    public Entry getAccepted() {
+    @Override
+    public void clear(SequenceNumber sequenceNumberToClear) {
+        if(!Objects.isNull(getAccepted())){
+            SequenceNumber sequenceNumberOfAcceptedData = getAccepted().getSequenceNumber();
+            if(sequenceNumberOfAcceptedData.getSeqNumber() <= sequenceNumberToClear.getSeqNumber()){
+                this.accepted = null;
+            }
+        }
+    }
+
+    public Data getAccepted() {
         return accepted;
     }
 }

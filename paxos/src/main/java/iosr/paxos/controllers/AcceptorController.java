@@ -2,6 +2,7 @@ package iosr.paxos.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import iosr.paxos.model.Data;
+import iosr.paxos.model.ProposeAnswer;
 import iosr.paxos.model.SequenceNumber;
 import iosr.paxos.services.acceptor.Acceptor;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +20,10 @@ public class AcceptorController {
         this.acceptor = acceptor;
     }
 
-    // /acceptor/proposal?sequenceNumber={"serverName": "lol", "seqNumber": 1}
-    @GetMapping("/proposal")
-    private ResponseEntity<Data> getProposal(@RequestParam String sequenceNumber) throws IOException {
-        SequenceNumber number = new ObjectMapper().readValue(sequenceNumber, SequenceNumber.class);
-        Data acceptorData = acceptor.handlePrepareRequest(number);
-        return ResponseEntity.ok(acceptorData);
+    @PostMapping("/proposal")
+    private ResponseEntity<ProposeAnswer> getProposal(@RequestBody SequenceNumber sequenceNumber) throws IOException {
+        ProposeAnswer acceptorAnswer = acceptor.handlePrepareRequest(sequenceNumber);
+        return ResponseEntity.ok(acceptorAnswer);
     }
 
     @PostMapping("/accept")

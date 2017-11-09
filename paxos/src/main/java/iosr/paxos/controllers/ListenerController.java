@@ -1,7 +1,7 @@
 package iosr.paxos.controllers;
 
 import iosr.paxos.model.Data;
-import iosr.paxos.model.Entry;
+import iosr.paxos.services.acceptor.Acceptor;
 import iosr.paxos.services.listener.Listener;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +23,8 @@ public class ListenerController {
     }
 
     @PostMapping
-    private ResponseEntity commitValue(@RequestBody Entry entry){
-        listener.proposeValue(entry);
+    private ResponseEntity commitValue(@RequestBody Data data){
+        listener.handleAcceptedData(data);
         return ResponseEntity.ok().build();
     }
 }
