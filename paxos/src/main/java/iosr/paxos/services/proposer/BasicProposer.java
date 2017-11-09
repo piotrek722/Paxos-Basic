@@ -17,7 +17,7 @@ public class BasicProposer implements Proposer {
     private SequenceNumber sequenceNumber;
 
     @Value("${cluster.size}")
-    private int clusterSize;
+     int clusterSize;
 
     @Value("${server.name}")
     private String serverName;
@@ -54,7 +54,7 @@ public class BasicProposer implements Proposer {
         communicationService.sendAcceptToAll(new Data(sequenceNumber, clientEntry));
     }
 
-    private boolean handlePromises(List<Data> promises) {
+     boolean handlePromises(List<Data> promises) {
 
         Optional<Entry> acceptedEntry = promises.stream()
                 .max(Comparator.comparingInt(promise -> promise.getSequenceNumber().getSeqNumber()))
@@ -66,22 +66,10 @@ public class BasicProposer implements Proposer {
         }
 
         return true;
-//        boolean isAccepted = true;
-//        for (Data promise : promises) {
-//
-//            Entry previouslyAcceptedValue = promise.getValue();
-//            if(!Objects.isNull(previouslyAcceptedValue)){
-//                this.clientEntry = previouslyAcceptedValue;
-//            }
-//            if (promise.getSequenceNumber().getSeqNumber() > getSequenceNumber().getSeqNumber()) {
-//                isAccepted = false;
-//                this.sequenceNumber.setSeqNumber(promise.getSequenceNumber().getSeqNumber());
-//              break;
-//            }
-//        }
+
     }
 
-    private Boolean isQuorum(List<Data> promises) {
+     Boolean isQuorum(List<Data> promises) {
         long count = promises.stream()
                 .map(Data::getSequenceNumber)
                 .map(SequenceNumber::getSeqNumber)
@@ -94,6 +82,13 @@ public class BasicProposer implements Proposer {
         return sequenceNumber;
     }
 
+    public Entry getClientEntry() {
+        return clientEntry;
+    }
+
+    public void setSequenceNumber(SequenceNumber sequenceNumber) {
+        this.sequenceNumber = sequenceNumber;
+    }
 
 }
 
