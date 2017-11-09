@@ -17,6 +17,10 @@ public final class SequenceNumber implements Serializable {
         this.seqNumber = seqNumber;
     }
 
+    public void incrementSeqNumberByOne(){
+        this.seqNumber++;
+    }
+
     public String getServerName() {
         return serverName;
     }

@@ -1,15 +1,24 @@
 package iosr.paxos.services.listener;
 
+import iosr.paxos.model.Data;
 import iosr.paxos.model.Entry;
+import iosr.paxos.model.SequenceNumber;
+import iosr.paxos.services.acceptor.Acceptor;
+import iosr.paxos.services.acceptor.BasicAcceptor;
+import iosr.paxos.services.communication.AcceptorCommunicationService;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 public class BasicListenerTest {
 
-    private BasicListener listener = new BasicListener();
+    private RestTemplate restTemplate = new RestTemplate();
+    private AcceptorCommunicationService acceptorCommunicationService = new AcceptorCommunicationService(restTemplate);
+    private Acceptor acceptor = new BasicAcceptor(acceptorCommunicationService);
+    private BasicListener listener = new BasicListener(acceptor);
 
     @Test
     public void shouldReturnNull() throws Exception {
@@ -44,12 +53,14 @@ public class BasicListenerTest {
         int clusterSize = 3;
         ReflectionTestUtils.setField(listener, "clusterSize", clusterSize);
 
+        SequenceNumber sequenceNumber = new SequenceNumber("server", 1);
         String key = "key", value = "value";
         Entry entry = new Entry(key, value);
+        Data data = new Data(sequenceNumber, entry);
 
         //when
-        listener.proposeValue(entry);
-        listener.proposeValue(entry);
+        listener.handleAcceptedData(data);
+        listener.handleAcceptedData(data);
 
         //then
         String valueSavedInKeyValueStore = listener.getEntryMap().get(key);
@@ -62,11 +73,13 @@ public class BasicListenerTest {
         int clusterSize = 3;
         ReflectionTestUtils.setField(listener, "clusterSize", clusterSize);
 
+        SequenceNumber sequenceNumber = new SequenceNumber("server", 1);
         String key = "key", value = "value";
         Entry entry = new Entry(key, value);
+        Data data = new Data(sequenceNumber, entry);
 
         //when
-        listener.proposeValue(entry);
+        listener.handleAcceptedData(data);
 
         //then
         int countInProposalMap = listener.getProposalMap().get(entry);
