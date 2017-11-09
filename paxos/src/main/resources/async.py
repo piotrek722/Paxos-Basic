@@ -1,5 +1,7 @@
 import requests
 import random
+import threading
+from threading import Thread
 
 servers = ['https://paxos-1.herokuapp.com',
            'https://paxos-2.herokuapp.com',
@@ -21,10 +23,15 @@ def make_propose(key, value):
     print(server, r.status_code, 'value:', value, 'succeeded:', r.text)
 
 
-print('Sending one propose message')
+print('Sending propose messages with different values')
 
 key = 'test'
-value = '2'
+value1 = '3'
+value2 = '4'
+# value3 = '3'
 
-make_propose(key, value)
+Thread(target=make_propose(key, value1)).start()
+Thread(target=make_propose(key, value2)).start()
+# Thread(target=make_propose(key, value3)).start()
+
 check_values(key)
